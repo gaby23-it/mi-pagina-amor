@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Para Ti ❤️</title>
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div id="portada">
+
+<h1 id="titulo"></h1>
+<h2 id="submensaje"></h2>
+<p id="mensajeIntro" class="oculto-intro">
+Tienes una carta para abrir 💌
+</p>
+
+<div id="sobre" class="oculto-intro" onclick="abrirCarta()">
+<div class="tapa"></div>
+<div class="cuerpo"></div>
+<div class="carta-interna">💌</div>
+</div>
+
+</div>
+
+<div id="contenido" class="oculto">
+
+<div class="carta">
+<h2>Mi amor</h2>
+<p id="mensaje">{{ data["mensaje"] }}</p>
+</div>
+<button onclick="editarMensaje()" class="sorpresa-btn">
+✏️ Editar mensaje
+</button>
+<button class="sorpresa-btn" onclick="toggleFotos()">📸 Fotos</button>
+<button class="sorpresa-btn" onclick="togglePoemas()">✍️ Poemas</button>
+<button class="sorpresa-btn" onclick="toggleRazones()">❤️ Razones</button>
+
+<div id="seccionFotos" class="oculto">
+<div class="foto-card-mini">
+<img src="{{ url_for('static', filename='fotos/foto1.jpeg') }}">
+<p>Recuerdo especial ❤️</p>
+</div>
+</div>
+
+<div id="seccionPoemas" class="oculto">
+<div class="poema-card">
+<p>En tu sonrisa encontré calma.</p>
+</div>
+</div>
+
+<div id="seccionRazones" class="oculto mensaje-final">
+<h2>Te amo ❤️</h2>
+<ul>
+<li>Porque me haces feliz</li>
+<li>Porque eres especial</li>
+<li>Porque eres tú</li>
+</ul>
+</div>
+
+<audio id="musica" autoplay loop>
+<source src="{{ url_for('static', filename='musica/cancion.mp3') }}">
+</audio>
+
+</div>
+
+<div id="contadorLive">
+💖 Llevamos juntos:
+<br>
+<span id="tiempoJuntos"></span>
+</div>
+
+<!-- 💖 LLUVIA DE CORAZONES -->
+<script>
+function crearCorazon() {
+    const corazon = document.createElement("div");
+    corazon.className = "corazon";
+
+    corazon.innerHTML = "❤";
+
+    corazon.style.left = Math.random() * window.innerWidth + "px";
+    corazon.style.fontSize = (15 + Math.random() * 25) + "px";
+
+    const duracion = 3000 + Math.random() * 3000;
+    corazon.style.animationDuration = duracion + "ms";
+
+    document.body.appendChild(corazon);
+
+    setTimeout(() => {
+        corazon.remove();
+    }, duracion);
+}
+
+setInterval(crearCorazon, 120);
+</script>
+
+<!-- 💌 LÓGICA -->
+<script>
+
+function abrirCarta(){
+
+document.getElementById("musica").play();
+
+document.getElementById("portada").style.display="none";
+document.getElementById("contenido").classList.remove("oculto");
+
+}
+
+function cerrarTodo(){
+document.getElementById("seccionFotos").classList.add("oculto");
+document.getElementById("seccionPoemas").classList.add("oculto");
+document.getElementById("seccionRazones").classList.add("oculto");
+}
+
+function toggleFotos(){
+cerrarTodo();
+document.getElementById("seccionFotos").classList.toggle("oculto");
+}
+
+function togglePoemas(){
+cerrarTodo();
+document.getElementById("seccionPoemas").classList.toggle("oculto");
+}
+
+function toggleRazones(){
+cerrarTodo();
+document.getElementById("seccionRazones").classList.toggle("oculto");
+}
+
+/* escritura */
+const nombres = "Gabriela ❤️ Richard";
+const mensaje = `Esta página es para ti porque te amo mucho
+y quiero que siempre recuerdes
+lo especial que eres para mí.`;
+
+let i=0;
+let j=0;
+
+function escribirNombres(){
+if(i<nombres.length){
+document.getElementById("titulo").innerHTML += nombres.charAt(i);
+i++;
+setTimeout(escribirNombres,100);
+}else{
+setTimeout(escribirMensaje,500);
+}
+}
+
+function escribirMensaje(){
+if(j<mensaje.length){
+document.getElementById("submensaje").innerHTML += mensaje.charAt(j);
+j++;
+setTimeout(escribirMensaje,50);
+}else{
+document.getElementById("mensajeIntro").classList.remove("oculto-intro");
+document.getElementById("sobre").classList.remove("oculto-intro");
+}
+}
+
+escribirNombres();
+
+
+const fechaInicio = new Date("2025-06-15 00:00:00"); // cambia esta fecha
+
+let ultimoTexto = "";
+
+function actualizarContador(){
+    const ahora = new Date();
+    let diferencia = ahora - fechaInicio;
+
+    const segundos = Math.floor(diferencia / 1000) % 60;
+    const minutos = Math.floor(diferencia / (1000 * 60)) % 60;
+    const horas = Math.floor(diferencia / (1000 * 60 * 60)) % 24;
+    const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
+
+    const texto = `${dias} días, ${horas} horas, ${minutos} minutos, ${segundos} segundos`;
+
+    const elemento = document.getElementById("tiempoJuntos");
+
+    // solo animar si cambió el texto
+    if(texto !== ultimoTexto){
+        elemento.innerHTML = texto;
+
+        elemento.classList.add("cambio");
+
+        setTimeout(()=>{
+            elemento.classList.remove("cambio");
+        },300);
+
+        ultimoTexto = texto;
+    }
+}
+
+setInterval(actualizarContador, 1000);
+
+actualizarContador();
+
+function editarMensaje(){
+    const nuevo = prompt("Escribe el nuevo mensaje romántico 💖");
+
+    if(!nuevo) return;
+
+    fetch("/guardar_mensaje", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ mensaje: nuevo })
+    })
+    .then(() => {
+        location.reload(); // recarga para ver cambios
+    });
+}
+
+</script>
+
+</body>
+</html>
